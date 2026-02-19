@@ -11,7 +11,7 @@
             --neon-blue: #00d2ff;
             --neon-red: #ff0055;
             --white-border: #ffffff;
-            --gold: #ffcc00; /* 上様カラー */
+            --gold: #ffcc00;
         }
 
         body {
@@ -46,7 +46,6 @@
         }
         .slot img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* BAN演出 */
         .slot.is-banned img { filter: brightness(0.2) grayscale(1); transform: scale(0.9); }
         .slot.is-banned::after {
             content: "×"; position: absolute; top: 50%; left: 50%;
@@ -54,7 +53,6 @@
             font-size: 50px; font-weight: bold; text-shadow: 0 0 10px #000; z-index: 10;
         }
 
-        /* 操作パネル */
         .controls { width: 100%; max-width: 500px; background: var(--panel-bg); padding: 12px; border-radius: 15px; box-sizing: border-box; border: 1px solid #444; margin: 0 auto; }
         .mode-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; background: #1a1a1a; color: #888; font-weight: bold; font-size: 14px; }
@@ -65,15 +63,14 @@
         .cost-btn { padding: 8px; font-size: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; cursor: pointer; }
         .cost-btn.active { background: #ff4500; border-color: #ff4500; }
         
-        /* 隠しコスト「上様」ボタン */
         #uesama-btn { 
             display: none; 
             grid-column: span 4; 
-            background: linear-gradient(45deg, #ff4500, #ff8c00); 
-            color: white; font-weight: bold; 
-            margin-top: 5px; animation: flash 1.5s infinite;
+            background: linear-gradient(45deg, #ff4500, #ffcc00); 
+            color: black; font-weight: bold; 
+            margin-top: 5px; animation: uesama-flash 1.0s infinite alternate;
         }
-        @keyframes flash { 0% { opacity: 0.8; } 50% { opacity: 1; box-shadow: 0 0 10px var(--gold); } 100% { opacity: 0.8; } }
+        @keyframes uesama-flash { from { box-shadow: 0 0 5px #ff4500; } to { box-shadow: 0 0 20px var(--gold); } }
 
         .pool {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
@@ -87,6 +84,8 @@
     </style>
 </head>
 <body>
+
+<audio id="uesama-audio" src="uesama_bgm.mp3"></audio>
 
 <div class="container">
     <div class="board">
@@ -121,7 +120,7 @@
                 <button class="cost-btn" onclick="loadPool('20', this)">C20</button>
                 <button class="cost-btn" onclick="loadPool('25', this)">C25</button>
                 <button class="cost-btn" onclick="loadPool('30', this)">C30</button>
-                <button id="uesama-btn" class="cost-btn" onclick="loadPool('uesama', this)">隠しコスト「上様」</button>
+                <button id="uesama-btn" class="cost-btn" onclick="loadPool('uesama', this)">隠しコスト「上様」開放</button>
             </div>
             <div class="pool" id="poolGrid"></div>
         </div>
@@ -133,16 +132,16 @@
 <script>
 let mode = 'pick';
 let selected = null;
+let isMusicTriggered = false;
 
 const data = {
     "15": ["Katerina.png", "Orchid.png", "Roland.png", "Snowowl.png", "Yammyn.png"],
     "20": ["Aida.png", "Beta.png", "Borzoi.png", "Breaker.png", "Darkstar.png", "Deucalion.png", "Emika.png", "Franca.png", "Hibiki.png", "ice.png", "Kitty.png", "kurisu.png", "kuro.png", "Pallas.png", "Qingni.png", "Scorpion.png", "Seraph.png", "suteko.png", "Virtues.png", "Zakharova.png"],
     "25": ["Aliz.png", "Angelis.png", "baze.png", "Cygnus.png", "doragu.png", "Ffreedo.png", "gouraikai.png", "haruka.png", "Ine.png", "Iva.png", "Kaze.png", "Lancelot.png", "Nora.png", "reki.png", "sanboruto.png", "Sharp.png", "sirogara-Photoroom.png", "Skysaber.png", "Valkia.png", "Xiaoling.png", "XVIII.png", "zyem.png"],
-    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "LonginusBeta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png", "Mumei.png"],
+    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "Longinus-Beta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png", "Mumei.png"],
     "uesama": ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png"]
 };
 
-// 隠し条件のキャラリスト
 const secretCombo = ["Aida.png", "Beta.png", "Borzoi.png", "Breaker.png"];
 
 function setMode(m) {
@@ -172,14 +171,28 @@ function loadPool(c, btn) {
 }
 
 function checkSecret() {
-    // Player A (s1〜s4) のキャラファイル名を取得
     const playerAFiles = ["s1", "s2", "s3", "s4"].map(id => {
         return document.getElementById(id).querySelector('img')?.dataset.file || "";
     });
 
-    // Aida, Beta, Borzoi, Breaker がすべて含まれているかチェック
     const isUnlocked = secretCombo.every(char => playerAFiles.includes(char));
-    document.getElementById('uesama-btn').style.display = isUnlocked ? "block" : "none";
+    const btn = document.getElementById('uesama-btn');
+    const audio = document.getElementById('uesama-audio');
+
+    if (isUnlocked) {
+        btn.style.display = "block";
+        if (!isMusicTriggered) {
+            audio.volume = 0.5; // 音量を50%に設定
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log("Playback blocked"));
+            isMusicTriggered = true;
+        }
+    } else {
+        btn.style.display = "none";
+        audio.pause();
+        audio.currentTime = 0;
+        isMusicTriggered = false;
+    }
 }
 
 function tapSlot(slot) {
@@ -195,11 +208,11 @@ function tapSlot(slot) {
             slot.classList.remove('is-banned');
             selected = null;
             document.querySelectorAll('.pool img').forEach(i => i.classList.remove('selected'));
-            checkSecret(); // 隠し条件チェック
+            checkSecret();
         } else if(hasImg) {
             slot.innerHTML = '';
             slot.classList.remove('is-banned');
-            checkSecret(); // 隠し条件チェック
+            checkSecret();
         }
     } else {
         if(!hasImg) return;
