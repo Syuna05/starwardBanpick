@@ -227,7 +227,7 @@ document.querySelectorAll('.slot').forEach(slot => {
         if (targetGroup.some(id => {
             const img = document.querySelector(`#${id} img`);
             return id !== slot.id && img && img.dataset.filename === filename;
-        })) { return alert("DUPLICATE CHARACTER DETECTED"); }
+        })) { return alert("同じキャラクターは選択できません"); }
 
         if (sourceId) document.getElementById(sourceId).innerHTML = '';
         slot.classList.remove('is-banned');
