@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>キャラBANピックボード - 大型UI版</title>
+    <title>キャラBANピックボード - BAN演出強化版</title>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -16,7 +16,7 @@
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
             background: var(--bg-dark);
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('back.png');
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('back.png');
             background-attachment: fixed;
             background-position: center;
             background-size: cover;
@@ -28,68 +28,58 @@
             align-items: center;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        .container { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 20px; }
+        @media (min-width: 1024px) { .container { flex-direction: row; align-items: flex-start; margin-top: 20px; } }
 
-        @media (min-width: 1024px) {
-            .container { flex-direction: row; align-items: flex-start; margin-top: 20px; }
-        }
-
-        /* ボードエリア */
-        .board { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-
-        .player-section {
-            background: rgba(0,0,0,0.5);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .board { flex: 1.2; display: flex; flex-direction: column; gap: 20px; }
+        .player-section { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
 
         .player-header {
-            font-size: 16px; font-weight: bold; margin-bottom: 10px;
-            padding: 4px 12px; border-left: 4px solid var(--neon-blue);
-            background: rgba(0,0,0,0.6); display: inline-block;
+            font-size: 18px; font-weight: bold; margin-bottom: 12px;
+            padding: 6px 16px; border-left: 5px solid var(--neon-blue);
+            background: rgba(0,0,0,0.7); display: inline-block;
+            border-radius: 0 4px 4px 0;
         }
         .header-b { border-left-color: var(--neon-red); }
 
-        .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .slot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        @media (min-width: 600px) { .slot-grid { grid-template-columns: repeat(4, 1fr); } }
 
         .slot {
             aspect-ratio: 1/1; background: rgba(0,0,0,0.8);
-            border: 2px solid var(--white-border); border-radius: 6px;
+            border: 3px solid var(--white-border); border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
         }
 
-        .slot img { width: 100%; height: 100%; object-fit: contain; }
+        .slot img { width: 100%; height: 100%; object-fit: contain; transition: all 0.3s ease; }
+
+        /* --- BAN時の演出強化 --- */
+        .slot.is-banned img { 
+            filter: brightness(0.2) grayscale(1); /* キャラを暗く、白黒に */
+            transform: scale(0.9); /* 少し小さくして「脱落感」を出す */
+        }
 
         .slot.is-banned::after {
-            content: "×"; position: absolute; color: var(--neon-red);
-            font-size: 60px; font-weight: bold; text-shadow: 0 0 10px #000;
+            content: "×"; 
+            position: absolute; 
+            top: 50%; left: 50%;
+            transform: translate(-50%, -51%); /* 中央に配置 */
+            color: var(--neon-red);
+            font-size: 140px; /* ✖をさらに巨大に */
+            font-weight: bold; 
+            text-shadow: 0 0 20px rgba(0,0,0,1), 0 0 10px rgba(255,0,85,0.5); /* ✖を光らせる */
+            z-index: 10;
+            pointer-events: none;
+            line-height: 1;
         }
+        /* ----------------------- */
 
-        /* 操作パネル（ここを大きく改良） */
-        .controls {
-            width: 100%;
-            max-width: 500px; /* 少し幅を広げた */
-            background: var(--panel-bg);
-            padding: 15px;
-            border-radius: 15px;
-            box-sizing: border-box;
-            border: 1px solid #444;
-            margin: 0 auto;
-        }
-
-        .mode-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { 
-            flex: 1; padding: 15px; border: none; border-radius: 10px; 
-            background: #1a1a1a; color: #888; font-weight: bold; font-size: 16px;
-        }
+        .controls { flex: 0.8; width: 100%; max-width: 500px; background: var(--panel-bg); padding: 20px; border-radius: 20px; box-sizing: border-box; border: 1px solid #444; margin: 0 auto; }
+        .mode-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 18px; border: none; border-radius: 12px; background: #1a1a1a; color: #888; font-weight: bold; font-size: 18px; }
         .tab-btn.active-pick { background: var(--neon-blue); color: #000; }
         .tab-btn.active-ban { background: var(--neon-red); color: #fff; }
 
@@ -97,32 +87,12 @@
         .cost-btn { padding: 12px; font-size: 14px; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; }
         .cost-btn.active { background: #ff4500; border-color: #ff4500; font-weight: bold; }
 
-        /* キャラ選択プールを大きく */
-        .pool {
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); /* 5列から3列に変更して1枚を大きく */
-            gap: 12px;
-            max-height: 450px; /* 高さをしっかり確保 */
-            overflow-y: auto; 
-            background: #000; 
-            padding: 12px; 
-            border-radius: 10px;
-            border: 1px solid #333;
-        }
+        .pool { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: 400px; overflow-y: auto; background: #000; padding: 12px; border-radius: 12px; }
+        .pool img { width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 10px; border: 2px solid #333; background: #111; }
+        .pool img.selected { border-color: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); transform: scale(1.05); }
 
-        @media (min-width: 480px) {
-            .pool { grid-template-columns: repeat(4, 1fr); } /* 少し広いスマホなら4列 */
-        }
-
-        .pool img { 
-            width: 100%; aspect-ratio: 1/1; object-fit: contain; 
-            border-radius: 8px; border: 2px solid #333; background: #111;
-            transition: 0.1s;
-        }
-        .pool img.selected { border-color: var(--neon-blue); box-shadow: 0 0 12px var(--neon-blue); transform: scale(1.05); }
-
-        .sys-reset { margin-top: 15px; width: 100%; padding: 15px; background: #333; color: #fff; border-radius: 10px; font-weight: bold; border: none; }
-        .status { font-size: 14px; color: #ffaa00; text-align: center; margin-top: 12px; font-weight: bold; }
+        .sys-reset { margin-top: 20px; width: 100%; padding: 15px; background: #333; color: #fff; border-radius: 10px; font-weight: bold; border: none; font-size: 16px; }
+        .status { font-size: 14px; color: #ffaa00; text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -158,8 +128,8 @@
             <div class="cost-row">
                 <button class="cost-btn active" onclick="loadPool('15', this)">C15</button>
                 <button class="cost-btn" onclick="loadPool('20', this)">C20</button>
-                <button class="cost-btn" onclick="showCostWrapper('25', this)">C25</button>
-                <button class="cost-btn" onclick="showCostWrapper('30', this)">C30</button>
+                <button class="cost-btn" onclick="loadPool('25', this)">C25</button>
+                <button class="cost-btn" onclick="loadPool('30', this)">C30</button>
             </div>
             <div class="pool" id="poolGrid"></div>
         </div>
@@ -176,11 +146,8 @@ const data = {
     "15": ["Katerina.png", "Orchid.png", "Roland.png", "Snowowl.png", "Yammyn.png"],
     "20": ["Aida.png", "Beta.png", "Borzoi.png", "Breaker.png", "Darkstar.png", "Deucalion.png", "Emika.png", "Franca.png", "Hibiki.png", "ice.png", "Kitty.png", "kurisu.png", "kuro.png", "Pallas.png", "Qingni.png", "Scorpion.png", "Seraph.png", "suteko.png", "Virtues.png", "Zakharova.png"],
     "25": ["Aliz.png", "Angelis.png", "baze.png", "Cygnus.png", "doragu.png", "Ffreedo.png", "gouraikai.png", "haruka.png", "Ine.png", "Iva.png", "Kaze.png", "Lancelot.png", "Nora.png", "reki.png", "sanboruto.png", "Sharp.png", "sirogara-Photoroom.png", "Skysaber.png", "Valkia.png", "Xiaoling.png", "XVIII.png", "zyem.png"],
-    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "Longinus-Beta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png"]
+    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "LonginusBeta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png", "Mumei.png", "Uesama.png"]
 };
-
-// 関数名の微調整
-function showCostWrapper(c, btn) { loadPool(c, btn); }
 
 function setMode(m) {
     mode = m;
@@ -213,10 +180,10 @@ function tapSlot(slot) {
     const hasImg = slot.querySelector('img');
     if(mode === 'pick') {
         if(selected) {
-            const isA = slot.id <= 's4';
+            const isA = ["s1","s2","s3","s4"].includes(slot.id);
             const group = isA ? ['s1','s2','s3','s4'] : ['s5','s6','s7','s8'];
             if(group.some(id => document.getElementById(id).querySelector('img')?.dataset.file === selected.file)) {
-                alert("重複配置はできません"); return;
+                alert("同じプレイヤーに重複はできません"); return;
             }
             slot.innerHTML = `<img src="${selected.src}" data-file="${selected.file}">`;
             slot.classList.remove('is-banned');
@@ -231,6 +198,7 @@ function tapSlot(slot) {
         if(slot.classList.contains('is-banned')) {
             slot.classList.remove('is-banned');
         } else {
+            // 合計で2体までBAN可能
             if(document.querySelectorAll('.is-banned').length < 2) slot.classList.add('is-banned');
         }
     }
@@ -243,7 +211,7 @@ function editName(p) {
 }
 
 function resetAll() {
-    if(confirm("全消去しますか？")) {
+    if(confirm("すべてクリアしますか？")) {
         document.querySelectorAll('.slot').forEach(s => { s.innerHTML = ''; s.classList.remove('is-banned'); });
     }
 }
