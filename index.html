@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>星の翼キャラBANピックボード</title>
+    <style>
+        :root {
+            --bg-dark: #0a0c10;
+            --panel-bg: rgba(20, 25, 35, 0.85);
+            --neon-blue: #00d2ff;
+            --neon-red: #ff0055;
+            --neon-orange: #ffaa00;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+            background: var(--bg-dark);
+            background-image: radial-gradient(circle at center, #1a2a3a 0%, #0a0c10 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .main-layout { display: flex; gap: 30px; align-items: flex-start; }
+
+        /* 左側：ボード */
+        .board-container {
+            position: relative;
+            width: 1000px; height: 720px;
+            background: url('image_1d9c09.png') no-repeat bottom center/contain;
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border-radius: 20px;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        /* プレイヤーラベル */
+        .player-label {
+            position: absolute; left: 30px;
+            font-size: 20px; font-weight: 900; padding: 8px 25px;
+            cursor: pointer; z-index: 10;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            transition: 0.3s;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        .label-a { top: 95px; background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
+        .label-b { top: 365px; background: var(--neon-red); color: #fff; box-shadow: 0 0 20px var(--neon-red); }
+        .player-label:hover { transform: skewX(-5deg) scale(1.1); filter: brightness(1.2); }
+
+        /* スロット */
+        .slot {
+            position: absolute; width: 198px; height: 198px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box; transition: 0.3s;
+        }
+        .slot:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); }
+        .slot.drag-over { border: 2px solid var(--neon-blue); box-shadow: inset 0 0 20px var(--neon-blue); }
+
+        /* BAN演出 */
+        .slot.is-banned img { filter: brightness(0.2) grayscale(1) blur(2px); }
+        .slot.is-banned::after {
+            content: "×"; position: absolute;
+            color: var(--neon-red); font-size: 200px; font-weight: 100;
+            text-shadow: 0 0 30px var(--neon-red);
+            animation: glitch 0.2s infinite alternate;
+        }
+        @keyframes glitch { from { opacity: 0.8; transform: scale(1); } to { opacity: 1; transform: scale(1.05); } }
+
+        .slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+
+        /* 座標固定 */
+        .a1 { top: 152px; left: 24px; }  .a2 { top: 152px; left: 270px; }
+        .a3 { top: 152px; left: 516px; } .a4 { top: 152px; left: 762px; }
+        .b1 { top: 420px; left: 24px; }  .b2 { top: 420px; left: 270px; }
+        .b3 { top: 420px; left: 516px; } .b4 { top: 420px; left: 762px; }
+
+        /* 右側：コントロール */
+        .controls {
+            width: 440px; background: var(--panel-bg);
+            padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; height: 720px; box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-switch {
+            display: flex; gap: 10px; margin-bottom: 25px;
+            padding: 6px; background: #000; border-radius: 12px;
+        }
+        .mode-btn {
+            flex: 1; padding: 14px; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; font-size: 14px;
+            color: #555; background: transparent; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .mode-btn.active-pick { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+        .mode-btn.active-ban { background: var(--neon-red); color: #fff; box-shadow: 0 0 15px var(--neon-red); }
+
+        .cost-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .cost-btn {
+            padding: 10px 0; cursor: pointer; border: 1px solid #333;
+            background: #111; color: #888; border-radius: 6px; font-size: 12px;
+        }
+        .cost-btn.active { border-color: var(--neon-orange); color: var(--neon-orange); box-shadow: 0 0 10px rgba(255,170,0,0.3); }
+
+        .char-pool {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+            overflow-y: auto; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;
+            flex-grow: 1; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .char-pool::-webkit-scrollbar { width: 6px; }
+        .char-pool::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        .char-pool img {
+            width: 100%; aspect-ratio: 1/1; cursor: grab; object-fit: cover;
+            border-radius: 10px; border: 1px solid #222; transition: 0.2s;
+        }
+        .char-pool img:hover { transform: translateY(-3px); border-color: var(--neon-blue); box-shadow: 0 5px 15px rgba(0,210,255,0.4); }
+
+        .footer-btns { margin-top: 25px; }
+        .reset-btn {
+            width: 100%; background: #222; color: #888; border: 1px solid #333;
+            padding: 15px; cursor: pointer; border-radius: 10px; font-weight: bold;
+            transition: 0.3s;
+        }
+        .reset-btn:hover { background: #333; color: #fff; border-color: #555; }
+        .info-msg {
+            font-size: 12px; color: var(--neon-orange); margin-top: 15px;
+            text-align: center; font-weight: bold; letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <div class="board-container">
+        <div class="player-label label-a" id="nameA" onclick="editPlayerName('A')">PLAYER A</div>
+        <div class="player-label label-b" id="nameB" onclick="editPlayerName('B')">PLAYER B</div>
+
+        <div class="slot a1" id="s1"></div><div class="slot a2" id="s2"></div>
+        <div class="slot a3" id="s3"></div><div class="slot a4" id="s4"></div>
+        <div class="slot b1" id="s5"></div><div class="slot b2" id="s6"></div>
+        <div class="slot b3" id="s7"></div><div class="slot b4" id="s8"></div>
+    </div>
+
+    <div class="controls">
+        <div class="mode-switch">
+            <button id="pickModeBtn" class="mode-btn active-pick" onclick="setMode('pick')">CharaPick</button>
+            <button id="banModeBtn" class="mode-btn" onclick="setMode('ban')">Ban Mode</button>
+        </div>
+
+        <div id="pickControls" style="display:contents">
+            <div class="cost-tabs">
+                <button class="cost-btn" onclick="showCost('15', this)">C15</button>
+                <button class="cost-btn" onclick="showCost('20', this)">C20</button>
+                <button class="cost-btn" onclick="showCost('25', this)">C25</button>
+                <button class="cost-btn" onclick="showCost('30', this)">C30</button>
+            </div>
+            <div id="charPool" class="char-pool"></div>
+        </div>
+
+        <div class="footer-btns">
+            <button class="reset-btn" onclick="resetBoard()">RESET</button>
+            <div id="statusMsg" class="info-msg">キャラを選択してください</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 名前の編集
+function editPlayerName(side) {
+    const label = document.getElementById('name' + side);
+    const newName = prompt("PLAYER NAME:", label.innerText);
+    if (newName) label.innerText = newName.toUpperCase();
+}
+
+const charData = {
+    "15": ["Katerina.png", "Orchid.png", "Roland.png", "Snowowl.png", "Yammyn.png"],
+    "20": ["Aida.png", "Beta.png", "Borzoi.png", "Breaker.png", "Darkstar.png", "Deucalion.png", "Emika.png", "Franca.png", "Hibiki.png", "ice.png", "Kitty.png", "kurisu.png", "kuro.png", "Pallas.png", "Qingni.png", "Scorpion.png", "Seraph.png", "suteko.png", "Virtues.png", "Zakharova.png"],
+    "25": ["Aliz.png", "Angelis.png", "baze.png", "Cygnus.png", "doragu.png", "Ffreedo.png", "gouraikai.png", "haruka.png", "Ine.png", "Iva.png", "Kaze.png", "Lancelot.png", "Nora.png", "reki.png", "sanboruto.png", "Sharp.png", "sirogara-Photoroom.png", "Skysaber.png", "Valkia.png", "Xiaoling.png", "XVIII.png", "zyem.png"],
+    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "LonginusBeta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png", "Mumei.png", "Uesama.png"]
+};
+
+let currentMode = 'pick';
+
+function setMode(mode) {
+    currentMode = mode;
+    const pBtn = document.getElementById('pickModeBtn');
+    const bBtn = document.getElementById('banModeBtn');
+    const msg = document.getElementById('statusMsg');
+    const pool = document.getElementById('charPool');
+
+    if (mode === 'pick') {
+        pBtn.classList.add('active-pick');
+        bBtn.classList.remove('active-ban');
+        msg.innerText = "キャラを選択してください";
+        pool.parentElement.style.opacity = "1";
+    } else {
+        bBtn.classList.add('active-ban');
+        pBtn.classList.remove('active-pick');
+        msg.innerText = "Banするキャラを選んでください(最大2体)";
+        pool.parentElement.style.opacity = "0.3";
+    }
+}
+
+document.querySelectorAll('.slot').forEach(slot => {
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('drop', e => {
+        e.preventDefault(); slot.classList.remove('drag-over');
+        if (currentMode !== 'pick') return;
+        const src = e.dataTransfer.getData("text/plain");
+        const filename = e.dataTransfer.getData("filename");
+        const sourceId = e.dataTransfer.getData("sourceId");
+        if (!src) return;
+
+        const isA = ["s1", "s2", "s3", "s4"].includes(slot.id);
+        const targetGroup = isA ? ["s1", "s2", "s3", "s4"] : ["s5", "s6", "s7", "s8"];
+        if (targetGroup.some(id => {
+            const img = document.querySelector(`#${id} img`);
+            return id !== slot.id && img && img.dataset.filename === filename;
+        })) { return alert("DUPLICATE CHARACTER DETECTED"); }
+
+        if (sourceId) document.getElementById(sourceId).innerHTML = '';
+        slot.classList.remove('is-banned');
+        createCharImg(slot.id, src, filename);
+    });
+
+    slot.addEventListener('click', () => {
+        const img = slot.querySelector('img');
+        if (!img) return;
+        if (currentMode === 'pick') {
+            slot.innerHTML = ''; slot.classList.remove('is-banned');
+        } else {
+            const currentBanCount = document.querySelectorAll('.slot.is-banned').length;
+            if (slot.classList.contains('is-banned')) {
+                slot.classList.remove('is-banned');
+            } else if (currentBanCount < 2) {
+                slot.classList.add('is-banned');
+            }
+        }
+    });
+});
+
+function createCharImg(targetId, src, filename) {
+    const img = document.createElement('img');
+    img.src = src; img.dataset.filename = filename; img.draggable = true;
+    img.addEventListener('dragstart', e => {
+        if (currentMode !== 'pick') return e.preventDefault();
+        e.dataTransfer.setData("text/plain", src);
+        e.dataTransfer.setData("filename", filename);
+        e.dataTransfer.setData("sourceId", targetId);
+    });
+    const target = document.getElementById(targetId);
+    target.innerHTML = ''; target.appendChild(img);
+}
+
+function showCost(cost, btn) {
+    document.querySelectorAll('.cost-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const pool = document.getElementById('charPool');
+    pool.innerHTML = '';
+    charData[cost].forEach(file => {
+        const img = document.createElement('img');
+        const src = `${cost}/${file}`;
+        img.src = src; img.dataset.filename = file; img.draggable = true;
+        img.addEventListener('dragstart', e => {
+            e.dataTransfer.setData("text/plain", src);
+            e.dataTransfer.setData("filename", file);
+            e.dataTransfer.setData("sourceId", "");
+        });
+        pool.appendChild(img);
+    });
+}
+
+function resetBoard() {
+    if(confirm("SYSTEM RESET?")) {
+        document.querySelectorAll('.slot').forEach(s => { s.innerHTML = ''; s.classList.remove('is-banned'); });
+    }
+}
+</script>
+</body>
+</html>
