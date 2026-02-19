@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>キャラBANピックボード - BAN演出強化版</title>
+    <title>キャラBANピックボード - 最適バランス版</title>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -22,7 +22,7 @@
             background-size: cover;
             color: white;
             margin: 0;
-            padding: 10px;
+            padding: 8px; /* 余白を少し削る */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -33,112 +33,95 @@
             max-width: 1200px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
 
         @media (min-width: 1024px) {
-            .container { flex-direction: row; align-items: flex-start; margin-top: 20px; }
+            .container { flex-direction: row; align-items: flex-start; margin-top: 20px; gap: 20px; }
         }
 
-        /* ボードエリア */
-        .board { flex: 1.2; display: flex; flex-direction: column; gap: 20px; }
+        /* ボードエリア：スマホでの圧迫感を抑える */
+        .board { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 
         .player-section {
             background: rgba(0,0,0,0.5);
-            padding: 12px;
+            padding: 10px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
         }
 
         .player-header {
-            font-size: 16px; font-weight: bold; margin-bottom: 10px;
+            font-size: 14px; font-weight: bold; margin-bottom: 8px;
             padding: 4px 12px; border-left: 4px solid var(--neon-blue);
             background: rgba(0,0,0,0.6); display: inline-block;
         }
         .header-b { border-left-color: var(--neon-red); }
 
-        /* スロットを2列にして巨大化（スマホ対応） */
-        .slot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-
-        @media (min-width: 600px) {
-            .slot-grid { grid-template-columns: repeat(4, 1fr); }
+        /* スロット：スマホでは4列（小さめ）に戻して高さを抑える */
+        .slot-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 6px; 
         }
 
         .slot {
             aspect-ratio: 1/1; background: rgba(0,0,0,0.8);
-            border: 3px solid var(--white-border); border-radius: 8px;
+            border: 2px solid var(--white-border); border-radius: 6px;
             display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        .slot img { width: 100%; height: 100%; object-fit: contain; transition: all 0.3s ease; }
+        .slot img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* --- 追加：BAN時の演出 --- */
-        .slot.is-banned img { 
-            filter: brightness(0.2) grayscale(1); /* 暗く＆白黒に */
-            transform: scale(0.9); /* 少し小さくして脱落感を演出 */
-        }
-
+        /* BAN演出：サイズに合わせて調整 */
+        .slot.is-banned img { filter: brightness(0.2) grayscale(1); transform: scale(0.9); }
         .slot.is-banned::after {
-            content: "×"; 
-            position: absolute; 
-            top: 50%; left: 50%;
-            transform: translate(-50%, -52%); /* ✖の位置微調整 */
-            color: var(--neon-red);
-            font-size: 120px; /* 巨大な✖ */
-            font-weight: bold; 
-            text-shadow: 0 0 20px #000, 0 0 10px rgba(255,0,85,0.8);
-            z-index: 10;
-            pointer-events: none;
-            line-height: 1;
+            content: "×"; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -52%); color: var(--neon-red);
+            font-size: 50px; /* スロットが小さくなった分、✖も調整 */
+            font-weight: bold; text-shadow: 0 0 10px #000; z-index: 10; pointer-events: none;
         }
-        /* ----------------------- */
 
+        /* 操作パネル：ボードと同時に見えるようコンパクトに */
         .controls {
             width: 100%;
             max-width: 500px;
             background: var(--panel-bg);
-            padding: 15px;
+            padding: 12px;
             border-radius: 15px;
             box-sizing: border-box;
             border: 1px solid #444;
             margin: 0 auto;
         }
 
-        .mode-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .mode-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
         .tab-btn { 
-            flex: 1; padding: 15px; border: none; border-radius: 10px; 
-            background: #1a1a1a; color: #888; font-weight: bold; font-size: 16px;
+            flex: 1; padding: 12px; border: none; border-radius: 8px; 
+            background: #1a1a1a; color: #888; font-weight: bold; font-size: 14px;
         }
         .tab-btn.active-pick { background: var(--neon-blue); color: #000; }
         .tab-btn.active-ban { background: var(--neon-red); color: #fff; }
 
-        .cost-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-        .cost-btn { padding: 12px; font-size: 14px; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; }
-        .cost-btn.active { background: #ff4500; border-color: #ff4500; font-weight: bold; }
+        .cost-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 10px; }
+        .cost-btn { padding: 8px; font-size: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; }
+        .cost-btn.active { background: #ff4500; border-color: #ff4500; }
 
+        /* キャラプール：3列でタップしやすさを維持しつつ高さを調整 */
         .pool {
             display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 12px;
-            max-height: 450px; 
+            grid-template-columns: repeat(4, 1fr); /* 4列にして全体の高さを短縮 */
+            gap: 8px;
+            max-height: 280px; /* スマホで1画面に収まりやすくするため低めに設定 */
             overflow-y: auto; 
-            background: #000; 
-            padding: 12px; 
-            border-radius: 10px;
-            border: 1px solid #333;
+            background: #000; padding: 10px; border-radius: 10px;
         }
 
-        .pool img { 
-            width: 100%; aspect-ratio: 1/1; object-fit: contain; 
-            border-radius: 8px; border: 2px solid #333; background: #111;
-        }
-        .pool img.selected { border-color: var(--neon-blue); box-shadow: 0 0 12px var(--neon-blue); transform: scale(1.05); }
+        .pool img { width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 6px; border: 1px solid #333; }
+        .pool img.selected { border: 2px solid var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); }
 
-        .sys-reset { margin-top: 15px; width: 100%; padding: 15px; background: #333; color: #fff; border-radius: 10px; font-weight: bold; border: none; }
-        .status { font-size: 14px; color: #ffaa00; text-align: center; margin-top: 12px; font-weight: bold; }
+        .sys-reset { margin-top: 10px; width: 100%; padding: 10px; background: #333; color: #fff; border-radius: 8px; font-weight: bold; border: none; font-size: 14px; }
+        .status { font-size: 12px; color: #ffaa00; text-align: center; margin-top: 8px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -174,8 +157,8 @@
             <div class="cost-row">
                 <button class="cost-btn active" onclick="loadPool('15', this)">C15</button>
                 <button class="cost-btn" onclick="loadPool('20', this)">C20</button>
-                <button class="cost-btn" onclick="showCostWrapper('25', this)">C25</button>
-                <button class="cost-btn" onclick="showCostWrapper('30', this)">C30</button>
+                <button class="cost-btn" onclick="loadPool('25', this)">C25</button>
+                <button class="cost-btn" onclick="loadPool('30', this)">C30</button>
             </div>
             <div class="pool" id="poolGrid"></div>
         </div>
@@ -185,17 +168,15 @@
 </div>
 
 <script>
+// ロジックは維持
 let mode = 'pick';
 let selected = null;
-
 const data = {
     "15": ["Katerina.png", "Orchid.png", "Roland.png", "Snowowl.png", "Yammyn.png"],
     "20": ["Aida.png", "Beta.png", "Borzoi.png", "Breaker.png", "Darkstar.png", "Deucalion.png", "Emika.png", "Franca.png", "Hibiki.png", "ice.png", "Kitty.png", "kurisu.png", "kuro.png", "Pallas.png", "Qingni.png", "Scorpion.png", "Seraph.png", "suteko.png", "Virtues.png", "Zakharova.png"],
     "25": ["Aliz.png", "Angelis.png", "baze.png", "Cygnus.png", "doragu.png", "Ffreedo.png", "gouraikai.png", "haruka.png", "Ine.png", "Iva.png", "Kaze.png", "Lancelot.png", "Nora.png", "reki.png", "sanboruto.png", "Sharp.png", "sirogara-Photoroom.png", "Skysaber.png", "Valkia.png", "Xiaoling.png", "XVIII.png", "zyem.png"],
-    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "LonginusBeta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png", "Mumei.png", "Uesama.png"]
+    "30": ["Akigumo.png", "Cammy.png", "Cavalry.png", "Cherub.png", "Convallaria.png", "Elfin.png", "Ether.png", "Griffin.png", "Hikari.png", "Longinus-Beta.png", "Qiuyu.png", "Rasiel.png", "Rhine.png", "Rota.png", "Shadow.png", "Siren.png"]
 };
-
-function showCostWrapper(c, btn) { loadPool(c, btn); }
 
 function setMode(m) {
     mode = m;
@@ -246,7 +227,6 @@ function tapSlot(slot) {
         if(slot.classList.contains('is-banned')) {
             slot.classList.remove('is-banned');
         } else {
-            // 合計で2体までBAN可能
             if(document.querySelectorAll('.is-banned').length < 2) slot.classList.add('is-banned');
         }
     }
