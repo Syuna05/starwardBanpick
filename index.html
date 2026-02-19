@@ -2,140 +2,114 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>星の翼キャラBANピックボード</title>
+    <title>キャラBANピックボード - ホワイトフレーム版</title>
     <style>
         :root {
-            --bg-dark: #0a0c10;
-            --panel-bg: rgba(20, 25, 35, 0.85);
+            --bg-dark: #0a0a0a;
+            --panel-bg: rgba(20, 20, 20, 0.9);
             --neon-blue: #00d2ff;
             --neon-red: #ff0055;
-            --neon-orange: #ffaa00;
+            --slot-border: #ffffff; /* 枠線を白に変更 */
         }
 
         body {
-            font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
             background: var(--bg-dark);
-            background-image: radial-gradient(circle at center, #1a2a3a 0%, #0a0c10 100%);
             color: white;
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
-            min-height: 100vh;
         }
 
-        .main-layout { display: flex; gap: 30px; align-items: flex-start; }
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; }
 
-        /* 左側：ボード */
+        /* 左側：ボードエリア */
         .board-container {
             position: relative;
             width: 1000px; height: 720px;
-            background: url('back.png') no-repeat bottom center/contain;
-            background-color: var(--panel-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            border-radius: 20px;
+            /* 背景画像の設定 */
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('back.png') no-repeat center center/cover;
+            background-color: #111;
+            box-shadow: 0 10px 50px rgba(0,0,0,1);
+            border-radius: 15px;
             flex-shrink: 0;
-            backdrop-filter: blur(10px);
+            border: 1px solid #333;
         }
 
-        /* プレイヤーラベル */
         .player-label {
-            position: absolute; left: 30px;
-            font-size: 20px; font-weight: 900; padding: 8px 25px;
-            cursor: pointer; z-index: 10;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-            transition: 0.3s;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            position: absolute; left: 24px; font-size: 22px; font-weight: bold; padding: 6px 18px;
+            background: rgba(0,0,0,0.9); cursor: pointer; z-index: 10;
+            border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
         }
-        .label-a { top: 95px; background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
-        .label-b { top: 365px; background: var(--neon-red); color: #fff; box-shadow: 0 0 20px var(--neon-red); }
-        .player-label:hover { transform: skewX(-5deg) scale(1.1); filter: brightness(1.2); }
+        .label-a { top: 100px; color: var(--neon-blue); border-left: 5px solid var(--neon-blue); }
+        .label-b { top: 370px; color: var(--neon-red); border-left: 5px solid var(--neon-red); }
 
-        /* スロット */
+        /* スロット：白枠に変更し、背景をより暗く */
         .slot {
             position: absolute; width: 198px; height: 198px;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-sizing: border-box; transition: 0.3s;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.6); /* スロット内部をさらに暗く */
+            border: 3px solid var(--slot-border); /* 白い枠線 */
+            box-sizing: border-box;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
-        .slot:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); }
-        .slot.drag-over { border: 2px solid var(--neon-blue); box-shadow: inset 0 0 20px var(--neon-blue); }
+
+        .slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: grab;
+        }
+
+        .slot.drag-over { border-color: var(--neon-blue); background: rgba(0,210,255,0.1); }
 
         /* BAN演出 */
-        .slot.is-banned img { filter: brightness(0.2) grayscale(1) blur(2px); }
+        .slot.is-banned img { filter: brightness(0.2) grayscale(1); }
         .slot.is-banned::after {
-            content: "×"; position: absolute;
-            color: var(--neon-red); font-size: 200px; font-weight: 100;
-            text-shadow: 0 0 30px var(--neon-red);
-            animation: glitch 0.2s infinite alternate;
+            content: "×"; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); color: var(--neon-red);
+            font-size: 200px; font-weight: bold; pointer-events: none; z-index: 20;
+            text-shadow: 0 0 20px #000;
         }
-        @keyframes glitch { from { opacity: 0.8; transform: scale(1); } to { opacity: 1; transform: scale(1.05); } }
 
-        .slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
-
-        /* 座標固定 */
+        /* スロット座標 */
         .a1 { top: 152px; left: 24px; }  .a2 { top: 152px; left: 270px; }
         .a3 { top: 152px; left: 516px; } .a4 { top: 152px; left: 762px; }
         .b1 { top: 420px; left: 24px; }  .b2 { top: 420px; left: 270px; }
         .b3 { top: 420px; left: 516px; } .b4 { top: 420px; left: 762px; }
 
-        /* 右側：コントロール */
+        /* 右側：コントロールエリア */
         .controls {
-            width: 440px; background: var(--panel-bg);
-            padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; height: 720px; box-sizing: border-box;
-            backdrop-filter: blur(10px);
+            width: 420px; background: var(--panel-bg); padding: 20px;
+            border-radius: 15px; display: flex; flex-direction: column; height: 720px; box-sizing: border-box;
+            border: 1px solid #333;
         }
 
-        .mode-switch {
-            display: flex; gap: 10px; margin-bottom: 25px;
-            padding: 6px; background: #000; border-radius: 12px;
-        }
-        .mode-btn {
-            flex: 1; padding: 14px; border: none; border-radius: 8px;
-            cursor: pointer; font-weight: bold; font-size: 14px;
-            color: #555; background: transparent; transition: 0.3s;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .mode-btn.active-pick { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
-        .mode-btn.active-ban { background: var(--neon-red); color: #fff; box-shadow: 0 0 15px var(--neon-red); }
+        .mode-switch { display: flex; gap: 10px; margin-bottom: 20px; background: #000; padding: 5px; border-radius: 10px; }
+        .mode-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: #555; background: transparent; }
+        .mode-btn.active-pick { background: var(--neon-blue); color: #000; }
+        .mode-btn.active-ban { background: var(--neon-red); color: #fff; }
 
         .cost-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-        .cost-btn {
-            padding: 10px 0; cursor: pointer; border: 1px solid #333;
-            background: #111; color: #888; border-radius: 6px; font-size: 12px;
-        }
-        .cost-btn.active { border-color: var(--neon-orange); color: var(--neon-orange); box-shadow: 0 0 10px rgba(255,170,0,0.3); }
+        .cost-btn { padding: 10px; cursor: pointer; border: 1px solid #333; background: #111; color: #888; border-radius: 5px; font-size: 11px; }
+        .cost-btn.active { background: #ff4500; color: white; border-color: #ff4500; }
 
         .char-pool {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
-            overflow-y: auto; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;
-            flex-grow: 1; border: 1px solid rgba(255,255,255,0.05);
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+            overflow-y: auto; background: #000; padding: 15px; border-radius: 10px; flex-grow: 1;
         }
-        .char-pool::-webkit-scrollbar { width: 6px; }
-        .char-pool::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-
         .char-pool img {
-            width: 100%; aspect-ratio: 1/1; cursor: grab; object-fit: cover;
-            border-radius: 10px; border: 1px solid #222; transition: 0.2s;
+            width: 100%; aspect-ratio: 1/1; cursor: grab; object-fit: contain;
+            border-radius: 6px; border: 1px solid #333; background: #111;
         }
-        .char-pool img:hover { transform: translateY(-3px); border-color: var(--neon-blue); box-shadow: 0 5px 15px rgba(0,210,255,0.4); }
 
-        .footer-btns { margin-top: 25px; }
-        .reset-btn {
-            width: 100%; background: #222; color: #888; border: 1px solid #333;
-            padding: 15px; cursor: pointer; border-radius: 10px; font-weight: bold;
-            transition: 0.3s;
-        }
-        .reset-btn:hover { background: #333; color: #fff; border-color: #555; }
-        .info-msg {
-            font-size: 12px; color: var(--neon-orange); margin-top: 15px;
-            text-align: center; font-weight: bold; letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+        .footer-btns { margin-top: 20px; }
+        .reset-btn { width: 100%; background: #222; color: #777; border: 1px solid #333; padding: 15px; cursor: pointer; border-radius: 8px; font-weight: bold; }
+        .reset-btn:hover { color: #fff; border-color: #555; }
+        .info-msg { font-size: 13px; color: #ffaa00; margin-top: 15px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -153,8 +127,8 @@
 
     <div class="controls">
         <div class="mode-switch">
-            <button id="pickModeBtn" class="mode-btn active-pick" onclick="setMode('pick')">CharaPick</button>
-            <button id="banModeBtn" class="mode-btn" onclick="setMode('ban')">Ban Mode</button>
+            <button id="pickModeBtn" class="mode-btn active-pick" onclick="setMode('pick')">PICKモード</button>
+            <button id="banModeBtn" class="mode-btn" onclick="setMode('ban')">BANモード</button>
         </div>
 
         <div id="pickControls" style="display:contents">
@@ -168,17 +142,17 @@
         </div>
 
         <div class="footer-btns">
-            <button class="reset-btn" onclick="resetBoard()">RESET</button>
-            <div id="statusMsg" class="info-msg">キャラを選択してください</div>
+            <button class="reset-btn" onclick="resetBoard()">SYSTEM RESET</button>
+            <div id="statusMsg" class="info-msg">READY TO PICK</div>
         </div>
     </div>
 </div>
 
 <script>
-// 名前の編集
+/* スクリプト部分は前回の機能を維持（名前編集、D&D、BAN2体制限、全体表示対応） */
 function editPlayerName(side) {
     const label = document.getElementById('name' + side);
-    const newName = prompt("PLAYER NAME:", label.innerText);
+    const newName = prompt("名前を入力:", label.innerText);
     if (newName) label.innerText = newName.toUpperCase();
 }
 
@@ -196,18 +170,18 @@ function setMode(mode) {
     const pBtn = document.getElementById('pickModeBtn');
     const bBtn = document.getElementById('banModeBtn');
     const msg = document.getElementById('statusMsg');
-    const pool = document.getElementById('charPool');
+    const pool = document.getElementById('charPool').parentElement;
 
     if (mode === 'pick') {
         pBtn.classList.add('active-pick');
         bBtn.classList.remove('active-ban');
         msg.innerText = "キャラを選択してください";
-        pool.parentElement.style.opacity = "1";
+        pool.style.opacity = "1";
     } else {
         bBtn.classList.add('active-ban');
         pBtn.classList.remove('active-pick');
-        msg.innerText = "Banするキャラを選んでください(最大2体)";
-        pool.parentElement.style.opacity = "0.3";
+        msg.innerText = "BANキャラを選択（MAX2体まで）";
+        pool.style.opacity = "0.3";
     }
 }
 
@@ -227,7 +201,7 @@ document.querySelectorAll('.slot').forEach(slot => {
         if (targetGroup.some(id => {
             const img = document.querySelector(`#${id} img`);
             return id !== slot.id && img && img.dataset.filename === filename;
-        })) { return alert("同じキャラクターは選択できません"); }
+        })) { return alert("重複配置はできません"); }
 
         if (sourceId) document.getElementById(sourceId).innerHTML = '';
         slot.classList.remove('is-banned');
@@ -282,7 +256,7 @@ function showCost(cost, btn) {
 }
 
 function resetBoard() {
-    if(confirm("SYSTEM RESET?")) {
+    if(confirm("すべてリセットしますか？")) {
         document.querySelectorAll('.slot').forEach(s => { s.innerHTML = ''; s.classList.remove('is-banned'); });
     }
 }
